@@ -1,5 +1,5 @@
 from config import MAX_CHARS
-from utils.paths import safe_path
+from functions.utils.paths import safe_path
 import os
 
 
