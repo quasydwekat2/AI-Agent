@@ -1,8 +1,26 @@
 from functions.utils.paths import safe_path
+from google.genai import types
 import subprocess
 import os
 
-
+schema_run_python_file = types.FunctionDeclaration(
+    name="run_python_file",
+    description="Executes a Python file and returns its output or errors",
+    parameters=types.Schema(
+        type=types.Type.OBJECT,
+        properties={
+            "file_path": types.Schema(
+                type=types.Type.STRING,
+                description="Path of the Python file relative to the working directory",
+            ),
+            "args": types.Schema(
+                type=types.Type.ARRAY,
+                items=types.Schema(type=types.Type.STRING),
+                description="Optional command line arguments for the script",
+            ),
+        },
+    ),
+)
 def run_python_file(
     working_directory: str,
     file_path: str,

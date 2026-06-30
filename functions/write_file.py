@@ -1,7 +1,25 @@
-from utils.paths import safe_path
+from google.genai import types
+from functions.utils.paths import safe_path
 import os
 
-
+schema_write_file = types.FunctionDeclaration(
+    name="write_file",
+    description="Writes content to a file in the working directory, creating or overwriting it",
+    parameters=types.Schema(
+        type=types.Type.OBJECT,
+        properties={
+            "file_path": types.Schema(
+                type=types.Type.STRING,
+                description="Path of the file to write to",
+            ),
+            "content": types.Schema(
+                type=types.Type.STRING,
+                description="Content to write into the file",
+            ),
+        },
+        required=["file_path", "content"],
+    ),
+)
 def write_file(working_directory: str, file_path: str, content: str) -> str:
     try:
         abs_file_path = safe_path(working_directory, file_path)
