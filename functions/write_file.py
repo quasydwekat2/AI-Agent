@@ -1,6 +1,25 @@
 from functions.utils.paths import safe_path
 import os
+from google.genai import types
 
+schema_write_file = types.FunctionDeclaration(
+    name="write_file",
+    description="Creates or overwrites a file with content",
+    parameters=types.Schema(
+        type=types.Type.OBJECT,
+        properties={
+            "file_path": types.Schema(
+                type=types.Type.STRING,
+                description="File path to write to"
+            ),
+            "content": types.Schema(
+                type=types.Type.STRING,
+                description="Text content to write into the file"
+            )
+        },
+        required=["file_path", "content"]
+    )
+)
 
 def write_file(working_directory: str, file_path: str, content: str) -> str:
     try:

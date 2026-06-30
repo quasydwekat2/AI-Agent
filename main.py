@@ -3,8 +3,9 @@ import argparse
 from dotenv import load_dotenv
 from google import genai
 from google.genai import types
+
 from prompts import system_prompt
-from call_function import available_functions
+from call_function import available_functions, call_function
 
 
 def generate_content(client, messages):
@@ -33,8 +34,8 @@ def config_client():
 def main():
     parser = argparse.ArgumentParser(description="Chatbot CLI")
 
-    parser.add_argument("user_prompt", type=str, help="User prompt")
-    parser.add_argument("--verbose", action="store_true", help="Enable verbose output")
+    parser.add_argument("user_prompt", type=str)
+    parser.add_argument("--verbose", action="store_true")
 
     args = parser.parse_args()
 
@@ -49,17 +50,20 @@ def main():
 
     response = generate_content(client, messages)
 
+    # 🔥 Function calling logic
     if response.function_calls:
+        function_results = []
+
         for function_call in response.function_calls:
-            print(f"Calling function: {function_call.name}({function_call.args})")
+            result = call_function(function_call, verbose=args.verbose)
+            function_results.append(result)
+
+            if args.verbose:
+                fr = result.parts[0].function_response.response
+                print(f"-> {fr}")
+
     else:
         print(response.text)
-
-    if args.verbose:
-        usage = response.usage_metadata
-        print(f"User prompt: {args.user_prompt}")
-        print(f"Prompt tokens: {usage.prompt_token_count}")
-        print(f"Response tokens: {usage.candidates_token_count}")
 
 
 if __name__ == "__main__":
