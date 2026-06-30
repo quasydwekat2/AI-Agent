@@ -4,14 +4,9 @@ from dotenv import load_dotenv
 from google import genai
 from google.genai import types
 
-
-def generate_content(client, messages):
-    response = client.models.generate_content(
-        model="gemini-2.5-flash",
-        contents=messages
-    )
-    return response
-
+from prompts import system_prompt
+from functions.call_function import available_functions
+from functions.utils.paths import safe_path
 
 def config_client():
     load_dotenv()
@@ -23,9 +18,20 @@ def config_client():
     return genai.Client(api_key=api_key)
 
 
+def generate_content(client, messages):
+    return client.models.generate_content(
+        model="gemini-2.5-flash",
+        contents=messages,
+        config=types.GenerateContentConfig(
+            system_instruction=system_prompt,
+            tools=[available_functions],
+            temperature=0
+        )
+    )
+
+
 def main():
     parser = argparse.ArgumentParser(description="Chatbot CLI")
-
     parser.add_argument("user_prompt", type=str, help="User prompt")
     parser.add_argument("--verbose", action="store_true", help="Enable verbose output")
 
@@ -42,11 +48,22 @@ def main():
 
     response = generate_content(client, messages)
 
-    print(response.text)
+    # =========================
+    # function calls handling
+    # =========================
+    if response.function_calls:
+        for function_call in response.function_calls:
+            print(f"Calling function: {function_call.name}({function_call.args})")
+    else:
+        print(response.text)
 
-    usage = response.usage_metadata
-
+    # =========================
+    # verbose mode
+    # =========================
     if args.verbose:
+        usage = response.usage_metadata
+
+        print("\n--- DEBUG INFO ---")
         print(f"User prompt: {args.user_prompt}")
         print(f"Prompt tokens: {usage.prompt_token_count}")
         print(f"Response tokens: {usage.candidates_token_count}")
